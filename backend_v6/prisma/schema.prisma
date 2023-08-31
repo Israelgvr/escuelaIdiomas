@@ -1,0 +1,351 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url = env("DATABASE_URL")
+}
+
+model Modulo {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  nombre String @unique
+  posicion Int @default(0)
+  rolesId String[] @db.ObjectId
+  roles Rol[] @relation(fields: [rolesId], references: [id])
+  @@map("modulos")
+}
+
+model Rol {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  nombre String @unique
+  posicion Int @default(0)
+  modulosId String[] @db.ObjectId
+  modulos Modulo[] @relation(fields: [modulosId], references: [id])
+  usuarios Usuario[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("roles")
+}
+
+model Parentesco {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  nombre String @unique
+  posicion Int @default(0)
+  personas Persona[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("parentescos")
+}
+
+model Ciudad {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  nombre String @unique
+  codigo String @unique
+  posicion Int @default(0)
+  personas Persona[]
+  filiales Filial[]
+  preInscripciones PreInscripcion[]
+  @@map("ciudades")
+}
+
+model Filial {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  nombre String
+  codigo String
+  ciudadId String @db.ObjectId
+  ciudad Ciudad @relation(fields: [ciudadId], references: [id], onDelete: Cascade)
+  localidad String
+  direccion String
+  celular Int?
+  telefono Int?
+  posicion Int @default(0)
+  enlaceWhatsApp String?
+  enlaceFacebook String?
+  enlaceYouTube String?
+  enlaceInstagram String?
+  enlaceTikTok String?
+  usuarios Usuario[]
+  idiomas Idioma[]
+  libros Libro[]
+  cursos Curso[]
+  tiposEstudiante TipoEstudiante[]
+  estudiantes Estudiante[]
+  firmas Firma[]
+  traspasosInscripciones Inscripcion[] @relation("traspasoFilial")
+  inscripciones Inscripcion[] @relation("filial")
+  preInscripciones PreInscripcion[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([nombre, codigo])
+  @@map("filiales")
+}
+
+model Persona {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  nombre String
+  apellidoPaterno String?
+  apellidoMaterno String?
+  email String?
+  cedula Int
+  cedulaComplemento String?
+  ciudadId String @db.ObjectId
+  ciudad Ciudad @relation(fields: [ciudadId], references: [id], onDelete: Cascade)
+  celular Int?
+  telefono Int?
+  fechaNacimiento DateTime? @db.Date
+  contactoNombre String?
+  contactoCelular Int?
+  contactoTelefono Int?
+  parentescoId String? @db.ObjectId
+  parentesco Parentesco? @relation(fields: [parentescoId], references: [id], onDelete: Cascade)
+  gestionDiploma Int?
+  gestionEgreso Int?
+  grado String?
+  nacionalidad String?
+  destinoActual String?
+  direccion String?
+  carnetCossmil String? @unique
+  carnetMilitar String? @unique
+  contactoCarnetCossmil String?
+  contactoCarnetMilitar String?
+  usuario Usuario?
+  estudiante Estudiante?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([cedula, ciudadId])
+  @@map("personas")
+}
+
+model Usuario {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  nombre String @unique
+  password String
+  rememberMeToken String?
+  personaId String @db.ObjectId @unique
+  persona Persona @relation(fields: [personaId], references: [id], onDelete: Cascade)
+  activo Boolean @default(true)
+  rolId String @db.ObjectId
+  rol Rol @relation(fields: [rolId], references: [id], onDelete: Cascade)
+  filialId String? @db.ObjectId
+  filial Filial? @relation(fields: [filialId], references: [id], onDelete: Cascade)
+  resetPasswordToken Int?
+  resetPasswordLimite DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("usuarios")
+}
+
+model Idioma {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  nombre String
+  codigo String
+  resolucionMinisterial String?
+  imagen String?
+  descripcion String?
+  libros Libro[]
+  niveles Nivel[]
+  cursos Curso[]
+  filialId String @db.ObjectId
+  filial Filial @relation(fields: [filialId], references: [id], onDelete: Cascade)
+  preInscripciones PreInscripcion[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([nombre, codigo, filialId])
+  @@map("idiomas")
+}
+
+model Libro {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  nombre String
+  codigo String
+  editorial String?
+  edicion Int?
+  stock Int @default(0)
+  imagen String?
+  idiomaId String @db.ObjectId
+  idioma Idioma @relation(fields: [idiomaId], references: [id], onDelete: Cascade)
+  nivelesId String[] @db.ObjectId
+  niveles Nivel[] @relation(fields: [nivelesId], references: [id])
+  notas Nota[]
+  filialId String @db.ObjectId
+  filial Filial @relation(fields: [filialId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([codigo, filialId])
+  @@map("libros")
+}
+
+model Nivel {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  nombre String
+  codigo String
+  posicion Int @default(0)
+  idiomaId String @db.ObjectId
+  idioma Idioma @relation(fields: [idiomaId], references: [id], onDelete: Cascade)
+  librosId String[] @db.ObjectId
+  libros Libro[] @relation(fields: [librosId], references: [id])
+  cursosId String[] @db.ObjectId
+  cursos Curso[] @relation(fields: [cursosId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([codigo, idiomaId])
+  @@map("niveles")
+}
+
+model Modalidad {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  nombre String @unique
+  posicion Int @default(0)
+  cursos Curso[]
+  preInscripciones PreInscripcion[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("modalidades")
+}
+
+model Curso {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  nombre String
+  activo Boolean @default(true)
+  modalidadId String @db.ObjectId
+  modalidad Modalidad @relation(fields: [modalidadId], references: [id], onDelete: Cascade)
+  idiomaId String @db.ObjectId
+  idioma Idioma @relation(fields: [idiomaId], references: [id], onDelete: Cascade)
+  horaInicial String
+  horaFinal String
+  nivelesId String[] @db.ObjectId
+  niveles Nivel[] @relation(fields: [nivelesId], references: [id])
+  inscripciones Inscripcion[]
+  filialId String @db.ObjectId
+  filial Filial @relation(fields: [filialId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("cursos")
+}
+
+model Fuerza {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  nombre String @unique
+  codigo String @unique
+  posicion Int @default(0)
+  estudiantes Estudiante[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("fuerzas")
+}
+
+model TipoEstudiante {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  nombre String
+  posicion Int @default(0)
+  descuentoPorcentaje Int @default(0)
+  militar Boolean @default(true)
+  estudiantes Estudiante[]
+  inscripciones Inscripcion[]
+  filialId String @db.ObjectId
+  filial Filial @relation(fields: [filialId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([nombre, filialId])
+  @@map("tiposEstudiante")
+}
+
+model Estudiante {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  activo Boolean @default(true)
+  matricula String?
+  tipoEstudianteId String @db.ObjectId
+  tipoEstudiante TipoEstudiante @relation(fields: [tipoEstudianteId], references: [id], onDelete: Cascade)
+  fuerzaId String? @db.ObjectId
+  fuerza Fuerza? @relation(fields: [fuerzaId], references: [id], onDelete: Cascade)
+  personaId String @db.ObjectId @unique
+  persona Persona @relation(fields: [personaId], references: [id], onDelete: Cascade)
+  inscripciones Inscripcion[]
+  notas Nota[]
+  filialId String @db.ObjectId
+  filial Filial @relation(fields: [filialId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([matricula, personaId, filialId])
+  @@map("estudiantes")
+}
+
+model Inscripcion {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  deposito Boolean @default(false)
+  numeroDeposito String?
+  traspaso Boolean @default(false)
+  traspasoFilialId String? @db.ObjectId
+  traspasoFilial Filial? @relation(name: "traspasoFilial", fields: [traspasoFilialId], references: [id], onDelete: Cascade)
+  estudianteId String @db.ObjectId
+  estudiante Estudiante @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  tipoEstudianteId String @db.ObjectId
+  tipoEstudiante TipoEstudiante @relation(fields: [tipoEstudianteId], references: [id], onDelete: Cascade)
+  cursoId String @db.ObjectId
+  curso Curso @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  descuentoPorcentaje Int @default(0)
+  descuento Float @default(0)
+  filialId String @db.ObjectId
+  filial Filial @relation(name: "filial", fields: [filialId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("inscripciones")
+}
+
+model Firma {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  nombre String
+  cargo String
+  posicion Int @default(0)
+  filialId String @db.ObjectId
+  filial Filial @relation(fields: [filialId], references: [id], onDelete: Cascade)
+  @@unique([cargo, filialId])
+  @@map("firmas")
+}
+
+model PreInscripcion {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  nombre String
+  apellidoPaterno String?
+  apellidoMaterno String?
+  email String
+  cedula Int
+  cedulaComplemento String?
+  ciudadId String @db.ObjectId
+  ciudad Ciudad @relation(fields: [ciudadId], references: [id], onDelete: Cascade)
+  celular Int?
+  telefono Int?
+  modalidadId String @db.ObjectId
+  modalidad Modalidad @relation(fields: [modalidadId], references: [id], onDelete: Cascade)
+  idiomaId String @db.ObjectId
+  idioma Idioma @relation(fields: [idiomaId], references: [id], onDelete: Cascade)
+  filialId String @db.ObjectId
+  filial Filial @relation(fields: [filialId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([cedula, ciudadId, filialId, idiomaId])
+  @@map("preinscripciones")
+}
+
+model Nota {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  nota1     Float
+  nota2     Float
+  nota3     Float
+  nota4     Float
+  nota5     Float
+  nota6     Float
+
+  promedioFinal Float
+  estudianteId String @db.ObjectId
+  estudiante Estudiante @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  libroId String @db.ObjectId
+  libro Libro  @relation(fields: [libroId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("notas")
+}

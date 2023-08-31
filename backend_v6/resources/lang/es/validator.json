@@ -1,0 +1,14 @@
+{
+  "shared": {
+    "required": "El campo es requerido",
+    "string": "Debe contener un texto válido",
+    "unique": "El registro ya existe",
+    "confirmed": "La confirmación no coincide",
+    "nullable": "Dato inválido",
+    "exists": "El valor no existe",
+    "rango": "Valor fuera del rango",
+    "email": "Debe contener un email válido",
+    "time": "Formato de hora inválido",
+    "minLength": "El campo no puede estar vacío"
+  }
+}
